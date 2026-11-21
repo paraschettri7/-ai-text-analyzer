@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+
 const examples = [
   'A product review',
   'A customer email',
@@ -24,7 +26,7 @@ function App() {
     setError('')
     setResult(null)
     try {
-      const response = await fetch('/analyze', {
+      const response = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: text.trim() }),
@@ -39,7 +41,7 @@ function App() {
       setResult(data)
     } catch (err) {
       setError(err instanceof TypeError
-        ? 'Could not connect to the analyzer. Check that the backend is running on port 3000, then try again.'
+        ? 'Could not connect to the analyzer. Check that the backend is running and that VITE_API_URL is configured correctly, then try again.'
         : err.message || 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)

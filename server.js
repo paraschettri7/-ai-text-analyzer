@@ -4,6 +4,34 @@ require("dotenv").config();
 
 const app = express();
 
+// Allow the deployed frontend and the local Vite development server to call the API.
+const configuredFrontendUrls = (process.env.FRONTEND_URL || "")
+    .split(",")
+    .map((url) => url.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+const allowedOrigins = new Set([
+    ...configuredFrontendUrls,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+]);
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+
+    if (origin && allowedOrigins.has(origin)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Vary", "Origin");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    }
+
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(204);
+    }
+
+    next();
+});
+
 app.use(express.json());
 
 // Home route
@@ -83,7 +111,7 @@ app.post("/analyze", async (req, res) => {
 });
 
 // Start server
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

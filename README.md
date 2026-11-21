@@ -41,6 +41,7 @@ text_analyser/
     |-- index.html
     |-- package.json        # React and Vite dependencies/scripts
     |-- vite.config.js      # Development server and API proxy
+    |-- .env.example        # Frontend API URL template
     `-- src/
         |-- App.jsx         # Analyzer interface and API interaction
         |-- main.jsx        # React entry point
@@ -90,12 +91,23 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 Keep `.env` private. It is excluded from Git by `.gitignore`. Do not put the key in the frontend.
 
+For local frontend development, leave `VITE_API_URL` unset so Vite uses its `/analyze` proxy to `http://localhost:3000`. For a deployed frontend, set `VITE_API_URL` to the backend's public base URL (for example, `https://your-render-service.onrender.com`) in the frontend hosting environment. The backend uses `FRONTEND_URL` for the deployed frontend origin; multiple comma-separated origins are supported. Local Vite origins are allowed for development.
+
+The frontend variable template is at `frontend/.env.example`. To use a direct backend URL locally instead of the Vite proxy, copy it to `frontend/.env.local` and set `VITE_API_URL` to your local backend base URL (`http://localhost:3000`). The `.env.local` file is ignored by Git.
+
+On the backend host, configure `GEMINI_API_KEY` and `FRONTEND_URL` as environment variables. `FRONTEND_URL` should be the deployed frontend origin, such as `https://your-app.vercel.app`. The server listens on the host-provided `PORT`, falling back to port `3000` locally.
+
+## Hosting configuration
+
+- **Render backend:** Use the repository root as the service root directory, `npm install` as the build command, and `npm start` as the start command. Set `GEMINI_API_KEY` and `FRONTEND_URL` in the service environment.
+- **Vercel frontend:** Set the project root directory to `frontend`, use `npm run build` as the build command, and `dist` as the output directory. Set `VITE_API_URL` to the Render service's public base URL. Vite embeds this public URL in the frontend bundle; do not put secrets in any `VITE_` variable.
+
 ## Run the application
 
 Start the backend from the project root:
 
 ```bash
-node server.js
+npm start
 ```
 
 The API listens on `http://localhost:3000`.
