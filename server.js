@@ -4,17 +4,20 @@ require("dotenv").config();
 
 const app = express();
 
-// Allow the deployed frontend and the local Vite development server to call the API.
+// Get allowed frontend URLs from environment variables
 const configuredFrontendUrls = (process.env.FRONTEND_URL || "")
     .split(",")
     .map((url) => url.trim().replace(/\/+$/, ""))
     .filter(Boolean);
+
+// Allowed frontend origins
 const allowedOrigins = new Set([
     ...configuredFrontendUrls,
     "http://localhost:5173",
     "http://127.0.0.1:5173"
 ]);
 
+// CORS configuration
 app.use((req, res, next) => {
     const origin = req.headers.origin;
 
@@ -25,6 +28,7 @@ app.use((req, res, next) => {
         res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     }
 
+    // Handle preflight requests
     if (req.method === "OPTIONS") {
         return res.sendStatus(204);
     }
@@ -42,11 +46,11 @@ app.get("/", (req, res) => {
 // AI Text Analysis endpoint
 app.post("/analyze", async (req, res) => {
     try {
-        // Get text from the request body
+        // Get text from request body
         const text = req.body.text;
 
         // Validate input
-        if (!text) {
+        if (!text || !text.trim()) {
             return res.status(400).json({
                 error: "Please provide text to analyze"
             });
@@ -67,12 +71,12 @@ app.post("/analyze", async (req, res) => {
             model: "gemini-3.1-flash-lite",
             contents: `Analyze this text.
 
-            Return:
-            1. Sentiment (Positive, Negative, or Neutral)
-            2. A short summary
-            3. Important keywords
+Return:
+1. Sentiment (Positive, Negative, or Neutral)
+2. A short summary
+3. Important keywords
 
-            Text: ${text}`,
+Text: ${text}`,
             config: {
                 responseMimeType: "application/json",
                 responseJsonSchema: {
@@ -87,7 +91,9 @@ app.post("/analyze", async (req, res) => {
                         },
                         keywords: {
                             type: "array",
-                            items: { type: "string" }
+                            items: {
+                                type: "string"
+                            }
                         }
                     },
                     required: ["sentiment", "summary", "keywords"]
@@ -95,10 +101,10 @@ app.post("/analyze", async (req, res) => {
             }
         });
 
-        // Convert JSON string into JavaScript object
+        // Convert response into a JavaScript object
         const data = JSON.parse(response.text);
 
-        // Send result to user
+        // Send result to frontend
         res.json(data);
 
     } catch (error) {
