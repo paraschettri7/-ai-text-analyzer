@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Build files
+frontend/dist/
+
+# Logs
+*.log
